@@ -29,7 +29,7 @@ class PropertyServices:
         return quantity
 
     async def export_to_csv(self) -> str:
-        temp_file = tempfile.NamedTemporaryFile(suffix=".csv", delete=False)
+        temp_file = tempfile.NamedTemporaryFile(suffix=".csv")
 
         quantity = await self.count_search_all()
         try:
