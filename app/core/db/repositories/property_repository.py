@@ -1,15 +1,14 @@
-from app.core.db import DBConnection
-from app.core.db.repositories.base_repository import Repository
 from app.core.entities import PropertyInDB
 from app.core.configs import get_logger
+from app.core.db.pg_connection2 import PGConnection
 from typing import List
 
 _logger = get_logger(__name__)
 
 
-class PropertyRepository(Repository):
-    def __init__(self, connection: DBConnection) -> None:
-        super().__init__(connection)
+class PropertyRepository:
+    def __init__(self, connection: PGConnection) -> None:
+        self.conn: PGConnection = connection
 
     async def select_by_id(self, property_id: int) -> PropertyInDB:
         try:
@@ -52,7 +51,7 @@ class PropertyRepository(Repository):
             WHERE p.id = %(property_id)s;
             """
 
-            raw_property = await self.conn.execute(
+            raw_property = self.conn.fetch_with_retry(
                 sql_statement=query, values={"property_id": property_id}
             )
 
@@ -80,7 +79,7 @@ class PropertyRepository(Repository):
             WHERE p.is_active IS TRUE
             """
 
-            raw_count = await self.conn.execute(sql_statement=query)
+            raw_count = self.conn.fetch_with_retry(sql_statement=query)
 
             if raw_count:
                 return raw_count["quantity"]
@@ -91,7 +90,7 @@ class PropertyRepository(Repository):
             _logger.error(f"Error: {str(error)}")
             return 0
 
-    async def select_all(self, page_size: int, offset: int) -> List[PropertyInDB]:
+    async def select_all(self, page_size: int, offset: int, rooms: int, bathrooms: int, parking_space: int, size: int, neighborhood: str) -> List[PropertyInDB]:
         try:
             query = """--sql
             SELECT
@@ -129,15 +128,41 @@ class PropertyRepository(Repository):
                 p.modality_id = m.id
             INNER JOIN public.companies c ON
                 p.company_id = c.id
-            WHERE p.is_active IS TRUE
             """
             values = {}
+            filter_values = [" WHERE p.is_active IS TRUE "]
+
+            if rooms:
+                filter_values.append(" p.rooms = %(rooms)s ")
+                values["rooms"] = rooms
+
+            if bathrooms:
+                filter_values.append(" p.bathrooms = %(bathrooms)s ")
+                values["bathrooms"] = bathrooms
+
+            if parking_space:
+                filter_values.append(" p.parking_space = %(parking_space)s")
+                values["parking_space"] = parking_space
+
+            if neighborhood:
+                filter_values.append(" n.name = %(neighborhood)s")
+                values["neighborhood"] = neighborhood
+
+            if size:
+                min_size = size - 10
+                max_size = size + 10
+                filter_values.append(" p.size > %(min_size)s AND p.size < %(max_size)s")
+                values["min_size"] = min_size
+                values["max_size"] = max_size
+
+            query += " AND ".join(filter_values)
 
             if page_size:
                 query += " ORDER BY p.id LIMIT %(page_size)s OFFSET %(offset)s;"
-                values = {"page_size": page_size, "offset": offset}
+                values["page_size"] = page_size
+                values["offset"] = offset
 
-            raw_properties = await self.conn.execute(sql_statement=query, values=values, many=True)
+            raw_properties = self.conn.fetch_with_retry(sql_statement=query, values=values, all=True)
             properties = []
 
             if raw_properties:

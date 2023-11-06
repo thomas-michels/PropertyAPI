@@ -1,15 +1,11 @@
 from fastapi import FastAPI
-from app.core.db import lifespan
 from app.api.routes import property_router
-from app.api.dependencies import startup
 from starlette.middleware.cors import CORSMiddleware
 
 
 def create_app() -> FastAPI:
     app = FastAPI(
-        title="PropertyAPI",
-        lifespan=lifespan
-    )
+        title="PropertyAPI")
 
     app.add_middleware(
         CORSMiddleware,

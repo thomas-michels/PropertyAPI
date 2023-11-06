@@ -2,6 +2,7 @@ from psycopg.connection_async import AsyncConnection
 from psycopg.rows import dict_row
 from .base_connection import DBConnection
 from app.core.configs import get_environment
+import time
 
 _env = get_environment()
 
