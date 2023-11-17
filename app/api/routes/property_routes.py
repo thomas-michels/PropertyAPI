@@ -58,9 +58,10 @@ async def search_all_properties_in_csv(services: PropertyServices = Depends(prop
 @router.post("/price/predict")
 async def predict_price(
     predict_price: PredictProperty,
+    model_id: int = None,
     services: PropertyServices = Depends(property_composer)
 ):
-    predicted_property = await services.predict_price(predict_property=predict_price)
+    predicted_property = await services.predict_price(predict_property=predict_price, model_id=model_id)
 
     if not predicted_property:
         raise HTTPException(status_code=404, detail="Not found")

@@ -113,7 +113,7 @@ class PropertyServices:
         except Exception as error:
             return
 
-    async def predict_price(self, predict_property: PredictProperty) -> PredictedProperty:
+    async def predict_price(self, predict_property: PredictProperty, model_id: int = None) -> PredictedProperty:
         address = await self.find_address_by_zip_code(zip_code=predict_property.zip_code)
 
         if not address:
@@ -135,7 +135,9 @@ class PropertyServices:
         try:
             url = f"{_env.GREY_WOLF_URL}/models/predict/price"
 
-            response = requests.post(url=url, json=property.model_dump())
+            params = {"model_id": model_id}
+
+            response = requests.post(url=url, json=property.model_dump(), params=params)
 
             response.raise_for_status()
 
