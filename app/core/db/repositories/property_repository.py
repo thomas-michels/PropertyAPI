@@ -129,8 +129,7 @@ class PropertyRepository:
                 p.company_id = c.id
             """
             values = {}
-            if any([rooms, bathrooms, parking_space, neighborhood, size]):
-                filter_values = [" WHERE "]
+            filter_values = []
 
             if rooms:
                 filter_values.append(" p.rooms = %(rooms)s ")
@@ -156,7 +155,7 @@ class PropertyRepository:
                 values["max_size"] = max_size
 
             if any([rooms, bathrooms, parking_space, neighborhood, size]):
-                query += " AND ".join(filter_values)
+                query += " WHERE " + " AND ".join(filter_values)
 
             if page_size:
                 query += " ORDER BY p.id LIMIT %(page_size)s OFFSET %(offset)s;"
