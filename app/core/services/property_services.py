@@ -117,10 +117,12 @@ class PropertyServices:
         address = await self.find_address_by_zip_code(zip_code=predict_property.zip_code)
 
         if not address:
+            _logger.warning(f"Address not found - Zip Code: {str(predict_property.zip_code)}")
             return
         
         is_cached = self.check_if_is_cached(predict_property=predict_property, address=address)
         if is_cached:
+            _logger.info(f"Cached property - Zip Code: {str(predict_property.zip_code)}")
             return is_cached
         
         property = Property(
@@ -148,7 +150,7 @@ class PropertyServices:
             return predicted_property
 
         except Exception as error:
-            _logger.error(f"Error predict_price: {str(error)}")
+            _logger.error(f"Error predict_price: {str(error)} - Response: {str(response.json())}")
 
     def cache_property(self, predicted_property: PredictedProperty) -> bool:
         try:
