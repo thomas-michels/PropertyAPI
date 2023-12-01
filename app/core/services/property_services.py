@@ -5,8 +5,6 @@ from app.core.configs import get_environment, get_logger
 from app.api.dependencies import Bucket
 from app.core.db import RedisClient
 from app.api.shared_schemas import PredictProperty, Property, PredictedProperty
-from datetime import date
-from random import randint
 import csv
 import json
 import requests
@@ -50,7 +48,7 @@ class PropertyServices:
         quantity = await self.__property_repository.count_select_all()
         return quantity
 
-    async def export_to_csv(self) -> str:
+    async def export_to_csv(self, model_id: int) -> str:
         temp_file = tempfile.NamedTemporaryFile(suffix=".csv", delete=False)
 
         quantity = await self.count_search_all()
@@ -80,8 +78,7 @@ class PropertyServices:
         _logger.info("Saving file on bucket")
 
         if quantity > 0:
-            now = date.today()
-            path = f"export/{now.year}/{now.month}/{now.day}/{randint(0, 10000)}.csv"
+            path = f"models/model #{model_id}.csv"
 
             Bucket.save_file(bucket_path=path, file_path=temp_file.name)
 

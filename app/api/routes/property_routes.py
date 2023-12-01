@@ -46,8 +46,8 @@ async def search_all_properties(
     return JSONResponse(jsonable_encoder({"count": quantity, "data": properties}))
 
 @router.get("/export/csv")
-async def search_all_properties_in_csv(services: PropertyServices = Depends(property_composer)):
-    file_url = await services.export_to_csv()
+async def search_all_properties_in_csv(model_id: int, services: PropertyServices = Depends(property_composer)):
+    file_url = await services.export_to_csv(model_id=model_id)
 
     if not file_url:
         raise HTTPException(status_code=404, detail="Not found")
